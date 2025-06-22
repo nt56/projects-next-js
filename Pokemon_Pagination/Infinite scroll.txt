@@ -1,0 +1,65 @@
+"use client";
+import { useEffect, useState } from "react";
+
+export default function Home() {
+  const [pokemonList, setPokemonList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+
+  const getPokemon = async () => {
+    setLoading(true);
+    const limit = 20;
+    const offset = page * limit;
+
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
+    );
+    const data = await response.json();
+
+    setPokemonList((prevList) => [...prevList, ...data.results]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    getPokemon();
+  }, [page]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const pageHeight = document.body.offsetHeight;
+
+      if (scrollPosition >= pageHeight - 200 && !loading) {
+        setPage((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading]);
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold text-center text-white mb-4">
+        Pokémon List
+      </h1>
+
+      <ul className="flex flex-col gap-5">
+        {pokemonList.map((pokemon, index) => (
+          <li
+            key={index}
+            className="bg-white border rounded-lg shadow-sm px-4 py-4 capitalize font-medium text-gray-800 hover:bg-indigo-100 transition"
+          >
+            {pokemon.name}
+          </li>
+        ))}
+      </ul>
+
+      {loading && (
+        <p className="font bold text-center text-white mt-4 animate-pulse font-medium">
+          Loading...
+        </p>
+      )}
+    </div>
+  );
+}
